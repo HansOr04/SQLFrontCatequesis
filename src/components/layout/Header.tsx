@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/common/Badge';
-import { APP_CONFIG, USER_ROLE_LABELS } from '@/lib/constants';
+import { APP_CONFIG, USER_ROLE_LABELS } from '../../lib/constants';
 
 interface HeaderProps {
   onMenuClick: () => void;

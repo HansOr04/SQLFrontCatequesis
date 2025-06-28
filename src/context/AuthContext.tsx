@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -18,20 +17,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
+        // Solo ejecutar en el cliente
+        if (typeof window === 'undefined') {
+          setIsLoading(false);
+          return;
+        }
+
         const storedToken = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         const storedUser = localStorage.getItem(STORAGE_KEYS.USER_DATA);
 
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
+          
+          // Verificar si el token sigue siendo válido
+          try {
+            await apiService.get('/auth/profile');
+          } catch (error) {
+            // Token inválido, limpiar datos
+            console.warn('Token inválido, limpiando sesión');
+            logout();
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         // Clear invalid data
-        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -40,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials): Promise<void> => {
     try {
       setIsLoading(true);
       const response = await apiService.post<LoginResponse>('/auth/login', credentials);
@@ -51,8 +67,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
         setToken(authToken);
         
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, authToken);
-        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+        // Guardar en localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, authToken);
+          localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+        }
       } else {
         throw new Error(response.message || 'Error de autenticación');
       }
@@ -67,18 +86,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER_DATA);
     
-    // Redirect to login
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+      
+      // Redirect to login
+      window.location.href = '/login';
+    }
   };
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
-      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
+      }
     }
   };
 

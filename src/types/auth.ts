@@ -1,3 +1,4 @@
+// Tipos para autenticación y usuarios
 export interface User {
   id_usuario: number;
   username: string;
@@ -76,3 +77,12 @@ export const USER_PERMISSIONS = {
 } as const;
 
 export type PermissionKey = keyof typeof USER_PERMISSIONS;
+
+// Etiquetas de roles para UI
+export const USER_ROLE_LABELS = {
+  admin: 'Administrador',
+  parroco: 'Párroco', 
+  secretaria: 'Secretaria',
+  catequista: 'Catequista',
+  consulta: 'Consulta',
+} as const;

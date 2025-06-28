@@ -1,4 +1,3 @@
-// src/app/(dashboard)/dashboard/page.tsx
 'use client';
 
 import React from 'react';
@@ -11,6 +10,7 @@ import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
 import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
+import { USER_ROLE_LABELS } from '@/types/auth';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -31,14 +31,7 @@ export default function DashboardPage() {
   };
 
   const getUserRoleDisplay = () => {
-    const roles = {
-      admin: 'Administrador del Sistema',
-      parroco: 'Párroco',
-      secretaria: 'Secretaria Parroquial',
-      catequista: 'Catequista',
-      consulta: 'Usuario de Consulta'
-    };
-    return roles[user?.tipo_perfil || 'consulta'];
+    return user?.tipo_perfil ? USER_ROLE_LABELS[user.tipo_perfil] : 'Usuario';
   };
 
   return (

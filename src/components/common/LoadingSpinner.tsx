@@ -287,4 +287,30 @@ export const LoadingPulse: React.FC<LoadingPulseProps> = ({
   );
 };
 
+// Pantalla de carga completa
+export const LoadingScreen: React.FC<{ message?: string }> = ({ 
+  message = 'Cargando...' 
+}) => {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+      <div className="text-center">
+        <LoadingSpinner size="xl" className="mb-4" />
+        <p className="text-neutral-600 text-lg">{message}</p>
+      </div>
+    </div>
+  );
+};
+
+// Componente de loading para botones
+export const ButtonSpinner: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <LoadingSpinner 
+      size="sm" 
+      color="white"
+      className={cn('mr-2', className)}
+      inline
+    />
+  );
+};
+
 export default LoadingSpinner;
