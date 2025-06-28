@@ -1,71 +1,66 @@
-// src/services/parroquias.ts
+// src/services/niveles.ts
 import { apiService } from './api';
 import { ApiResponse } from '@/types/api';
-import { Parroquia } from '@/types/parroquia';
-
-class ParroquiasService {
-  async getAll(): Promise<ApiResponse<Parroquia[]>> {
-    try {
-      return await apiService.get<Parroquia[]>('/parroquias');
-    } catch (error) {
-      throw new Error('Error al cargar parroquias');
-    }
-  }
-
-  async getById(id: number): Promise<ApiResponse<Parroquia>> {
-    try {
-      return await apiService.get<Parroquia>(`/parroquias/${id}`);
-    } catch (error) {
-      throw new Error('Error al cargar parroquia');
-    }
-  }
-
-  async search(query: string): Promise<ApiResponse<Parroquia[]>> {
-    try {
-      return await apiService.get<Parroquia[]>('/parroquias/search', { q: query });
-    } catch (error) {
-      throw new Error('Error al buscar parroquias');
-    }
-  }
-}
-
-export const parroquiasService = new ParroquiasService();
-
-// src/services/niveles.ts
-import { Nivel } from '@/types/nivel';
+import { Nivel, NivelFormData, NivelStats } from '@/types/nivel';
 
 class NivelesService {
+  private readonly baseUrl = '/niveles';
+
+  // Obtener todos los niveles
   async getAll(): Promise<ApiResponse<Nivel[]>> {
-    try {
-      return await apiService.get<Nivel[]>('/niveles');
-    } catch (error) {
-      throw new Error('Error al cargar niveles');
-    }
+    return apiService.get(this.baseUrl);
   }
 
+  // Obtener niveles ordenados por secuencia
   async getOrdenados(): Promise<ApiResponse<Nivel[]>> {
-    try {
-      return await apiService.get<Nivel[]>('/niveles/ordenados');
-    } catch (error) {
-      throw new Error('Error al cargar niveles ordenados');
-    }
+    return apiService.get(`${this.baseUrl}/ordenados`);
   }
 
+  // Obtener nivel por ID
   async getById(id: number): Promise<ApiResponse<Nivel>> {
-    try {
-      return await apiService.get<Nivel>(`/niveles/${id}`);
-    } catch (error) {
-      throw new Error('Error al cargar nivel');
-    }
+    return apiService.get(`${this.baseUrl}/${id}`);
   }
 
+  // Buscar niveles
   async search(query: string): Promise<ApiResponse<Nivel[]>> {
-    try {
-      return await apiService.get<Nivel[]>('/niveles/search', { q: query });
-    } catch (error) {
-      throw new Error('Error al buscar niveles');
-    }
+    return apiService.get(`${this.baseUrl}/search`, { q: query });
+  }
+
+  // Obtener estadísticas de un nivel
+  async getStats(id: number): Promise<ApiResponse<NivelStats>> {
+    return apiService.get(`${this.baseUrl}/${id}/stats`);
+  }
+
+  // Obtener progresión de niveles para un catequizando
+  async getProgresion(idCatequizando: number): Promise<ApiResponse<{
+    niveles_completados: Nivel[];
+    nivel_actual: Nivel | null;
+    siguiente_nivel: Nivel | null;
+    puede_avanzar: boolean;
+  }>> {
+    return apiService.get(`${this.baseUrl}/progresion/${idCatequizando}`);
+  }
+
+  // Crear nuevo nivel
+  async create(data: NivelFormData): Promise<ApiResponse<Nivel>> {
+    return apiService.post(this.baseUrl, data);
+  }
+
+  // Actualizar nivel
+  async update(id: number, data: NivelFormData): Promise<ApiResponse<Nivel>> {
+    return apiService.put(`${this.baseUrl}/${id}`, data);
+  }
+
+  // Reordenar niveles
+  async reorder(ordenData: Array<{ id_nivel: number; nuevo_orden: number }>): Promise<ApiResponse<Nivel[]>> {
+    return apiService.put(`${this.baseUrl}/reorder`, { ordenData });
+  }
+
+  // Eliminar nivel
+  async delete(id: number): Promise<ApiResponse<void>> {
+    return apiService.delete(`${this.baseUrl}/${id}`);
   }
 }
 
 export const nivelesService = new NivelesService();
+export default nivelesService;

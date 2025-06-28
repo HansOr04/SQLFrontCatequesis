@@ -1,7 +1,8 @@
+// src/components/common/Table.tsx - Corregido
 import React, { useState } from 'react';
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import { cn } from '@/lib/utils';
-import { TableColumn, SortConfig } from '@/types/api';
+import { TableColumn, SortConfig } from '@/types/common'; // Cambiado de @/types/api
 import LoadingSpinner from './LoadingSpinner';
 
 interface TableProps<T> {
@@ -20,6 +21,7 @@ interface TableProps<T> {
   hover?: boolean;
   bordered?: boolean;
   sticky?: boolean;
+  keyExtractor?: (item: T) => string | number;
 }
 
 const sizeClasses = {
@@ -34,7 +36,7 @@ const cellPaddingClasses = {
   lg: 'px-6 py-4',
 };
 
-export function Table<T extends { id?: string | number }>({
+export function Table<T>({
   data,
   columns,
   loading = false,
@@ -50,6 +52,7 @@ export function Table<T extends { id?: string | number }>({
   hover = true,
   bordered = true,
   sticky = false,
+  keyExtractor,
 }: TableProps<T>) {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
@@ -68,11 +71,32 @@ export function Table<T extends { id?: string | number }>({
     onSort?.(newSortConfig);
   };
 
+  // Función para obtener el ID de un elemento
+  const getRowId = (item: T, index: number): string | number => {
+    if (keyExtractor) {
+      return keyExtractor(item);
+    }
+    // Si el item tiene una propiedad id, usarla
+    if (item && typeof item === 'object' && 'id' in item) {
+      return (item as any).id;
+    }
+    // Si tiene id_[tipo], usarlo
+    if (item && typeof item === 'object') {
+      const itemObj = item as any;
+      const idKeys = Object.keys(itemObj).filter(key => key.startsWith('id_'));
+      if (idKeys.length > 0) {
+        return itemObj[idKeys[0]];
+      }
+    }
+    // Fallback al índice
+    return index;
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (!selectable || !onSelectionChange) return;
 
     if (checked) {
-      const allIds = data.map(item => item.id).filter((id): id is string | number => id !== undefined);
+      const allIds = data.map((item, index) => getRowId(item, index));
       onSelectionChange(allIds);
     } else {
       onSelectionChange([]);
@@ -90,11 +114,9 @@ export function Table<T extends { id?: string | number }>({
   };
 
   const isAllSelected = selectable && data.length > 0 && 
-    data.every(item => item.id && selectedRows.includes(item.id));
+    data.every((item, index) => selectedRows.includes(getRowId(item, index)));
   
   const isIndeterminate = selectable && selectedRows.length > 0 && !isAllSelected;
-
-  const visibleColumns = columns.filter(column => !column.hidden);
 
   if (loading) {
     return (
@@ -108,7 +130,7 @@ export function Table<T extends { id?: string | number }>({
     return (
       <div className="text-center py-12">
         <svg
-          className="mx-auto h-12 w-12 text-neutral-400"
+          className="mx-auto h-12 w-12 text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -120,24 +142,24 @@ export function Table<T extends { id?: string | number }>({
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="mt-2 text-sm font-medium text-neutral-900">
+        <h3 className="mt-2 text-sm font-medium text-gray-900">
           Sin datos
         </h3>
-        <p className="mt-1 text-sm text-neutral-500">{emptyMessage}</p>
+        <p className="mt-1 text-sm text-gray-500">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
     <div className={cn('overflow-x-auto', className)}>
-      <table className="table-responsive">
-        <thead className={cn({ 'sticky top-0 z-10': sticky })}>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className={cn('bg-gray-50', { 'sticky top-0 z-10': sticky })}>
           <tr>
             {selectable && (
-              <th className={cn('table-header', cellPaddingClasses[size])}>
+              <th className={cn('text-left text-xs font-medium text-gray-500 uppercase tracking-wider', cellPaddingClasses[size])}>
                 <input
                   type="checkbox"
-                  className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                   checked={isAllSelected}
                   ref={(el) => {
                     if (el) el.indeterminate = isIndeterminate;
@@ -146,25 +168,23 @@ export function Table<T extends { id?: string | number }>({
                 />
               </th>
             )}
-            {visibleColumns.map((column, index) => (
+            {columns.map((column, index) => (
               <th
                 key={String(column.key) || index}
                 className={cn(
-                  'table-header',
+                  'text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
                   cellPaddingClasses[size],
                   sizeClasses[size],
                   {
-                    'cursor-pointer select-none hover:bg-neutral-100': 
+                    'cursor-pointer select-none hover:bg-gray-100': 
                       sortable && column.sortable,
-                    'text-center': column.align === 'center',
-                    'text-right': column.align === 'right',
                   }
                 )}
                 style={{ width: column.width }}
                 onClick={() => handleSort(column)}
               >
                 <div className="flex items-center space-x-1">
-                  <span>{column.label}</span>
+                  <span>{column.title}</span>
                   {sortable && column.sortable && (
                     <div className="flex flex-col">
                       <ChevronUpIcon
@@ -172,7 +192,7 @@ export function Table<T extends { id?: string | number }>({
                           'h-3 w-3',
                           sortConfig?.key === column.key && sortConfig.direction === 'asc'
                             ? 'text-primary-600'
-                            : 'text-neutral-400'
+                            : 'text-gray-400'
                         )}
                       />
                       <ChevronDownIcon
@@ -180,7 +200,7 @@ export function Table<T extends { id?: string | number }>({
                           'h-3 w-3 -mt-1',
                           sortConfig?.key === column.key && sortConfig.direction === 'desc'
                             ? 'text-primary-600'
-                            : 'text-neutral-400'
+                            : 'text-gray-400'
                         )}
                       />
                     </div>
@@ -190,54 +210,52 @@ export function Table<T extends { id?: string | number }>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-200">
-          {data.map((row, rowIndex) => (
-            <tr
-              key={row.id || rowIndex}
-              className={cn(
-                'table-row',
-                {
-                  'bg-neutral-50': striped && rowIndex % 2 === 1,
-                  'hover:bg-neutral-50': hover && !striped,
-                  'border-b border-neutral-200': bordered,
-                }
-              )}
-            >
-              {selectable && (
-                <td className={cn('table-cell', cellPaddingClasses[size])}>
-                  <input
-                    type="checkbox"
-                    className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-                    checked={row.id ? selectedRows.includes(row.id) : false}
-                    onChange={(e) => row.id && handleSelectRow(row.id, e.target.checked)}
-                  />
-                </td>
-              )}
-              {visibleColumns.map((column, colIndex) => {
-                const value = row[column.key as keyof T];
-                const content = column.render 
-                  ? column.render(value, row) 
-                  : String(value || '');
-
-                return (
-                  <td
-                    key={String(column.key) || colIndex}
-                    className={cn(
-                      'table-cell',
-                      cellPaddingClasses[size],
-                      sizeClasses[size],
-                      {
-                        'text-center': column.align === 'center',
-                        'text-right': column.align === 'right',
-                      }
-                    )}
-                  >
-                    {content}
+        <tbody className="bg-white divide-y divide-gray-200">
+          {data.map((row, rowIndex) => {
+            const rowId = getRowId(row, rowIndex);
+            return (
+              <tr
+                key={rowId}
+                className={cn(
+                  {
+                    'bg-gray-50': striped && rowIndex % 2 === 1,
+                    'hover:bg-gray-50': hover && !striped,
+                    'border-b border-gray-200': bordered,
+                  }
+                )}
+              >
+                {selectable && (
+                  <td className={cn('whitespace-nowrap', cellPaddingClasses[size])}>
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      checked={selectedRows.includes(rowId)}
+                      onChange={(e) => handleSelectRow(rowId, e.target.checked)}
+                    />
                   </td>
-                );
-              })}
-            </tr>
-          ))}
+                )}
+                {columns.map((column, colIndex) => {
+                  const content = column.render 
+                    ? column.render(row) 
+                    : String((row as any)[column.key] || '');
+
+                  return (
+                    <td
+                      key={String(column.key) || colIndex}
+                      className={cn(
+                        'whitespace-nowrap',
+                        cellPaddingClasses[size],
+                        sizeClasses[size],
+                        column.className
+                      )}
+                    >
+                      {content}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -258,21 +276,21 @@ export const SimpleTable: React.FC<SimpleTableProps> = ({
 }) => {
   return (
     <div className={cn('overflow-x-auto', className)}>
-      <table className="table-responsive">
-        <thead>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
           <tr>
             {headers.map((header, index) => (
-              <th key={index} className="table-header">
+              <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-200">
+        <tbody className="bg-white divide-y divide-gray-200">
           {rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className="table-row">
+            <tr key={rowIndex} className="hover:bg-gray-50">
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} className="table-cell">
+                <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {cell}
                 </td>
               ))}

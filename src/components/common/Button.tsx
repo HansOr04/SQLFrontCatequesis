@@ -1,3 +1,4 @@
+// src/components/common/Button.tsx - Corregido
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -8,7 +9,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode; // Hacer children opcional
+  isIconOnly?: boolean; // Nueva prop para botones solo con iconos
 }
 
 const buttonVariants = {
@@ -27,6 +29,14 @@ const buttonSizes = {
   xl: 'px-8 py-4 text-lg',
 };
 
+// Tamaños específicos para botones solo con iconos
+const iconOnlySizes = {
+  sm: 'p-1.5',
+  md: 'p-2',
+  lg: 'p-3',
+  xl: 'p-4',
+};
+
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
@@ -37,12 +47,16 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   className,
   children,
+  isIconOnly,
   ...props
 }) => {
+  // Determinar si es un botón solo con icono automáticamente
+  const actuallyIconOnly = isIconOnly || (icon && !children && !loading);
+
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
   
   const variantClasses = buttonVariants[variant];
-  const sizeClasses = buttonSizes[size];
+  const sizeClasses = actuallyIconOnly ? iconOnlySizes[size] : buttonSizes[size];
   
   const buttonClasses = cn(
     baseClasses,
@@ -51,6 +65,7 @@ export const Button: React.FC<ButtonProps> = ({
     {
       'w-full': fullWidth,
       'btn-loading': loading,
+      'aspect-square': actuallyIconOnly, // Hacer cuadrado los botones solo con iconos
     },
     className
   );
@@ -59,8 +74,8 @@ export const Button: React.FC<ButtonProps> = ({
     <span className={cn(
       'flex items-center',
       {
-        'mr-2': iconPosition === 'left' && children,
-        'ml-2': iconPosition === 'right' && children,
+        'mr-2': iconPosition === 'left' && children && !actuallyIconOnly,
+        'ml-2': iconPosition === 'right' && children && !actuallyIconOnly,
       }
     )}>
       {icon}
@@ -71,21 +86,50 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       className={buttonClasses}
       disabled={disabled || loading}
+      title={actuallyIconOnly && typeof children === 'string' ? children : undefined} // Tooltip para botones solo con iconos
       {...props}
     >
-      {iconPosition === 'left' && iconElement}
       {loading ? (
         <div className="flex items-center">
-          <div className="w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin mr-2" />
-          Cargando...
+          <div className="w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin" />
+          {!actuallyIconOnly && <span className="ml-2">Cargando...</span>}
         </div>
+      ) : actuallyIconOnly ? (
+        // Botón solo con icono
+        iconElement
       ) : (
+        // Botón normal con texto
         <>
+          {iconPosition === 'left' && iconElement}
           {children}
           {iconPosition === 'right' && iconElement}
         </>
       )}
     </button>
+  );
+};
+
+// Componente específico para botones solo con iconos
+interface IconButtonProps extends Omit<ButtonProps, 'children' | 'iconPosition' | 'isIconOnly'> {
+  icon: React.ReactNode;
+  'aria-label': string; // Requerido para accesibilidad
+  tooltip?: string;
+}
+
+export const IconButton: React.FC<IconButtonProps> = ({
+  icon,
+  'aria-label': ariaLabel,
+  tooltip,
+  ...props
+}) => {
+  return (
+    <Button
+      {...props}
+      icon={icon}
+      isIconOnly
+      aria-label={ariaLabel}
+      title={tooltip || ariaLabel}
+    />
   );
 };
 

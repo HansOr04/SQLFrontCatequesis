@@ -1,4 +1,4 @@
-﻿{
+{
   "tailwindCSS.experimental.classRegex": [
     ["cn\\(([^)]*)\\)", "'([^']*)'"],
     ["cva\\(([^)]*)\\)", "[\"']([^\"']*).*?[\"']"]
@@ -14,5 +14,6 @@
   "scss.validate": false,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "typescript.preferences.importModuleSpecifier": "relative"
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "CodeGPT.apiKey": "CodeGPT Plus Beta"
 }
