@@ -23,7 +23,7 @@ class ApiService {
       (config) => {
         const token = this.getToken();
         if (token) {
-          config.headers.Authorization = Bearer ;
+          config.headers.Authorization = 'Bearer' ;
         }
         return config;
       },
