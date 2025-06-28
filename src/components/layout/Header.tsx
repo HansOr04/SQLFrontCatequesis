@@ -10,6 +10,8 @@ import {
   UserCircleIcon,
   CogIcon,
   ArrowRightOnRectangleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -19,9 +21,16 @@ import { APP_CONFIG, USER_ROLE_LABELS } from '@/lib/constants';
 interface HeaderProps {
   onMenuClick: () => void;
   sidebarOpen: boolean;
+  onSidebarToggle?: () => void;
+  sidebarCollapsed?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  onMenuClick, 
+  sidebarOpen, 
+  onSidebarToggle,
+  sidebarCollapsed = false 
+}) => {
   const { user, logout } = useAuth();
 
   const notifications = [
@@ -67,6 +76,24 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen }) => {
                 </div>
               </div>
             </div>
+
+            {/* Botón de colapsar sidebar (solo desktop) */}
+            {onSidebarToggle && (
+              <button
+                type="button"
+                onClick={onSidebarToggle}
+                className="hidden lg:block ml-4 rounded-md p-2 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-800"
+              >
+                <span className="sr-only">
+                  {sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+                </span>
+                {sidebarCollapsed ? (
+                  <ChevronRightIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronLeftIcon className="h-5 w-5" />
+                )}
+              </button>
+            )}
           </div>
 
           {/* Información del usuario y navegación */}

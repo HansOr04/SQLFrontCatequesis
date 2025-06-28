@@ -27,6 +27,8 @@ import { Badge } from '@/components/common/Badge';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 interface NavItem {
@@ -116,7 +118,12 @@ const adminNavigation: NavItem[] = [
   },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  isOpen, 
+  onClose, 
+  collapsed = false,
+  onToggleCollapsed 
+}) => {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -173,31 +180,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         href={item.href}
         onClick={onClose}
         className={cn(
-          'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-          isChild ? 'pl-11' : '',
+          'group flex items-center text-sm font-medium rounded-md transition-colors',
+          collapsed && !isChild ? 'justify-center px-2 py-3' : 'px-3 py-2',
+          isChild && !collapsed ? 'pl-11' : '',
           current
             ? 'bg-primary-100 text-primary-900 border-r-4 border-primary-600'
             : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
         )}
+        title={collapsed ? item.name : undefined}
       >
         <item.icon
           className={cn(
-            'flex-shrink-0 h-5 w-5 mr-3',
+            'flex-shrink-0 h-5 w-5',
+            collapsed ? '' : 'mr-3',
             current
               ? 'text-primary-600'
               : 'text-neutral-400 group-hover:text-neutral-600'
           )}
           aria-hidden="true"
         />
-        <span className="flex-1">{item.name}</span>
-        {item.badge && (
-          <Badge
-            variant={current ? 'primary' : 'neutral'}
-            size="sm"
-            className="ml-2"
-          >
-            {item.badge}
-          </Badge>
+        {!collapsed && (
+          <>
+            <span className="flex-1">{item.name}</span>
+            {item.badge && (
+              <Badge
+                variant={current ? 'primary' : 'neutral'}
+                size="sm"
+                className="ml-2"
+              >
+                {item.badge}
+              </Badge>
+            )}
+          </>
         )}
       </Link>
     );
@@ -223,6 +237,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
       </div>
 
+      {/* Logo para desktop cuando está colapsado */}
+      {collapsed && (
+        <div className="hidden lg:flex items-center justify-center h-16 border-b border-neutral-200">
+          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+            <svg
+              className="w-5 h-5 text-white"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 2L2 7V10C2 16 6 20.5 12 22C18 20.5 22 16 22 10V7L12 2M12 4.5L20 8.5V10C20 15 17 18.5 12 20C7 18.5 4 15 4 10V8.5L12 4.5M12 7L6 10V10.5C6 13.5 8 16.5 12 17.5C16 16.5 18 13.5 18 10.5V10L12 7Z" />
+            </svg>
+          </div>
+        </div>
+      )}
+
       {/* Navegación principal */}
       <nav className="flex-1 px-4 pt-6 pb-4 space-y-1 overflow-y-auto">
         {/* Navegación principal */}
@@ -243,11 +272,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           
           return (
             <div key={section.name} className="space-y-1">
-              <div className="px-3 py-2">
-                <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                  {section.name}
-                </h3>
-              </div>
+              {!collapsed && (
+                <div className="px-3 py-2">
+                  <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                    {section.name}
+                  </h3>
+                </div>
+              )}
               {section.children?.map((item) => (
                 <NavLink key={item.name} item={item} isChild />
               ))}
@@ -274,13 +305,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Información del usuario para desktop cuando está colapsado */}
+      {collapsed && (
+        <div className="hidden lg:block border-t border-neutral-200 p-2">
+          <div className="flex justify-center">
+            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+              <span className="text-xs font-medium text-primary-600">
+                {user?.username?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
   return (
     <>
       {/* Sidebar para desktop */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+      <div className={cn(
+        'hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 transition-all duration-300',
+        collapsed ? 'lg:w-16' : 'lg:w-64'
+      )}>
         <div className="nav-sidebar">
           <SidebarContent />
         </div>

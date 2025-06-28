@@ -1,7 +1,7 @@
 'use client';
 
 import { Layout } from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
 
 export default function DashboardLayout({
   children,
