@@ -75,7 +75,7 @@ const Pagination: React.FC<PaginationProps> = ({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          icon={ChevronLeft}
+          icon={<ChevronLeft/>}
           iconPosition="left"
         >
           Anterior
@@ -106,7 +106,7 @@ const Pagination: React.FC<PaginationProps> = ({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          icon={ChevronRight}
+          icon={<ChevronRight/>}
           iconPosition="right"
         >
           Siguiente
