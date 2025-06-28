@@ -17,26 +17,29 @@ import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
+// Tipo para permisos permitidos
+type Permission = 'CREATE_CATEQUIZANDO' | 'CREATE_GRUPO' | 'MANAGE_ASISTENCIA' | 'CREATE_CERTIFICADO' | 'VIEW_REPORTS';
+
 interface QuickAction {
   title: string;
   description: string;
   href: string;
   icon: React.ComponentType<any>;
   color: string;
-  permissions: string[];
+  permissions: Permission[];
 }
 
 export const QuickActions: React.FC = () => {
   const { user } = useAuth();
 
-  const hasPermission = (permissions: string[]): boolean => {
+  const hasPermission = (permissions: Permission[]): boolean => {
     if (!user) return false;
     
     // Admin tiene todos los permisos
     if (user.tipo_perfil === 'admin') return true;
     
     // Lógica simplificada de permisos basada en roles
-    const userPermissions = {
+    const userPermissions: Record<string, Permission[]> = {
       parroco: ['CREATE_CATEQUIZANDO', 'CREATE_GRUPO', 'MANAGE_ASISTENCIA', 'CREATE_CERTIFICADO', 'VIEW_REPORTS'],
       secretaria: ['CREATE_CATEQUIZANDO', 'MANAGE_ASISTENCIA', 'CREATE_CERTIFICADO'],
       catequista: ['MANAGE_ASISTENCIA'],

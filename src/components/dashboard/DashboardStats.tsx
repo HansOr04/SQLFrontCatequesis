@@ -90,15 +90,28 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
     );
   }
 
-  const stats = [
+  // Tipo para las estadísticas individuales
+  interface StatItem {
+    name: string;
+    value: number | string;
+    icon: React.ComponentType<any>;
+    color: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+    trend?: {
+      value: number;
+      direction: 'up' | 'down';
+      period: string;
+    };
+  }
+
+  const stats: StatItem[] = [
     {
       name: 'Catequizandos',
       value: data.total_catequizandos,
       icon: UsersIcon,
-      color: 'primary' as const,
+      color: 'primary',
       trend: {
         value: 12,
-        direction: 'up' as const,
+        direction: 'up',
         period: 'vs mes anterior'
       }
     },
@@ -106,22 +119,22 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       name: 'Catequistas',
       value: data.total_catequistas,
       icon: AcademicCapIcon,
-      color: 'secondary' as const,
+      color: 'secondary',
     },
     {
       name: 'Grupos Activos',
       value: data.total_grupos,
       icon: UserGroupIcon,
-      color: 'success' as const,
+      color: 'success',
     },
     {
       name: 'Inscripciones',
       value: data.total_inscripciones,
       icon: DocumentTextIcon,
-      color: 'warning' as const,
+      color: 'warning',
       trend: {
         value: 8,
-        direction: 'up' as const,
+        direction: 'up',
         period: 'este mes'
       }
     },
@@ -132,7 +145,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       color: data.porcentaje_asistencia_promedio >= 80 ? 'success' : 
             data.porcentaje_asistencia_promedio >= 60 ? 'warning' : 'error',
       trend: {
-        value: data.porcentaje_asistencia_promedio >= 80 ? 3 : -2,
+        value: data.porcentaje_asistencia_promedio >= 80 ? 3 : 2,
         direction: data.porcentaje_asistencia_promedio >= 80 ? 'up' : 'down',
         period: 'vs mes anterior'
       }
@@ -145,7 +158,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       name: 'Parroquias Activas',
       value: data.parroquias_activas,
       icon: BuildingLibraryIcon,
-      color: 'primary' as const,
+      color: 'primary',
     });
   }
 
