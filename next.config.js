@@ -1,6 +1,4 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+const nextConfig = {
   // Configuración experimental para App Router
   experimental: {
     // Optimizaciones para CSS
@@ -63,7 +61,7 @@ const nextConfig: NextConfig = {
           },
           // Librerías comunes
           lib: {
-            test(module: any) {
+            test(module) {
               return (
                 module.size() > 160000 &&
                 /node_modules[/\\]/.test(module.identifier())
@@ -78,12 +76,6 @@ const nextConfig: NextConfig = {
         },
       };
     }
-
-    // Alias para imports más limpios
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, 'src'),
-    };
 
     return config;
   },
@@ -105,4 +97,4 @@ const nextConfig: NextConfig = {
   swcMinify: true,
 };
 
-export default nextConfig;
+module.exports = nextConfig;

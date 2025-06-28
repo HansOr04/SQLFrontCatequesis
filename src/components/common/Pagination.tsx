@@ -1,18 +1,16 @@
-
-// src/components/common/Pagination.tsx
-import React from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import Button from './Button'
+import React from 'react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { cn } from '@/lib/utils';
+import Button from './Button';
 
 interface PaginationProps {
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
-  itemsPerPage?: number
-  totalItems?: number
-  showInfo?: boolean
-  className?: string
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage?: number;
+  totalItems?: number;
+  showInfo?: boolean;
+  className?: string;
 }
 
 const Pagination: React.FC<PaginationProps> = ({
@@ -25,39 +23,39 @@ const Pagination: React.FC<PaginationProps> = ({
   className,
 }) => {
   const getVisiblePages = () => {
-    const delta = 2
-    const range: number[] = []
-    const rangeWithDots: (number | string)[] = []
+    const delta = 2;
+    const range: number[] = [];
+    const rangeWithDots: (number | string)[] = [];
 
     for (
       let i = Math.max(2, currentPage - delta);
       i <= Math.min(totalPages - 1, currentPage + delta);
       i++
     ) {
-      range.push(i)
+      range.push(i);
     }
 
     if (currentPage - delta > 2) {
-      rangeWithDots.push(1, '...')
+      rangeWithDots.push(1, '...');
     } else {
-      rangeWithDots.push(1)
+      rangeWithDots.push(1);
     }
 
-    rangeWithDots.push(...range)
+    rangeWithDots.push(...range);
 
     if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push('...', totalPages)
+      rangeWithDots.push('...', totalPages);
     } else {
-      rangeWithDots.push(totalPages)
+      rangeWithDots.push(totalPages);
     }
 
-    return rangeWithDots
-  }
+    return rangeWithDots;
+  };
 
-  const startItem = (currentPage - 1) * (itemsPerPage || 0) + 1
-  const endItem = Math.min(currentPage * (itemsPerPage || 0), totalItems || 0)
+  const startItem = (currentPage - 1) * (itemsPerPage || 0) + 1;
+  const endItem = Math.min(currentPage * (itemsPerPage || 0), totalItems || 0);
 
-  if (totalPages <= 1) return null
+  if (totalPages <= 1) return null;
 
   return (
     <div className={cn('flex items-center justify-between', className)}>
@@ -75,7 +73,7 @@ const Pagination: React.FC<PaginationProps> = ({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          icon={<ChevronLeft/>}
+          icon={<ChevronLeftIcon className="h-4 w-4" />}
           iconPosition="left"
         >
           Anterior
@@ -106,14 +104,14 @@ const Pagination: React.FC<PaginationProps> = ({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          icon={<ChevronRight/>}
+          icon={<ChevronRightIcon className="h-4 w-4" />}
           iconPosition="right"
         >
           Siguiente
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Pagination
+export default Pagination;
