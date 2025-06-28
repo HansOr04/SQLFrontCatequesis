@@ -1,8 +1,8 @@
-// src/contexts/AuthContext.tsx
+// src/context/AuthContext.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthContextType, LoginCredentials } from '@/types/auth';
+import { User, AuthContextType, LoginCredentials, LoginResponse } from '@/types/auth';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { apiService } from '@/services/api';
 
@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       setIsLoading(true);
-      const response = await apiService.post('/auth/login', credentials);
+      const response = await apiService.post<LoginResponse>('/auth/login', credentials);
       
       if (response.success) {
         const { user: userData, token: authToken } = response.data;
