@@ -1,4 +1,4 @@
-// src/components/dashboard/RecentActivity.tsx
+// src/components/dashboard/RecentActivity.tsx - Corregido
 'use client';
 
 import React from 'react';
@@ -13,7 +13,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { formatDate } from '@/lib/utils';
+import { formatDateWithOptions } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
 
 interface ActivityItem {
@@ -194,7 +194,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({
                         </div>
                         <div className="whitespace-nowrap text-right text-xs text-neutral-500">
                           <time dateTime={activity.fecha}>
-                            {formatDate(new Date(activity.fecha), {
+                            {formatDateWithOptions(activity.fecha, {
                               month: 'short',
                               day: 'numeric',
                               hour: '2-digit',

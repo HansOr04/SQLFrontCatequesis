@@ -1,172 +1,17 @@
-import { type ClassValue, clsx } from 'clsx';
+// src/lib/utils.ts - Corregido
+
+import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-/**
- * Combina clases CSS de forma inteligente usando clsx y tailwind-merge
- */
+// Función de utilidad para clases CSS
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Formatea un número como moneda
- */
-export function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
-}
-
-/**
- * Formatea una fecha de forma legible
- */
-export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOptions): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  };
-  
-  return new Intl.DateTimeFormat('es-EC', { ...defaultOptions, ...options }).format(dateObj);
-}
-
-/**
- * Formatea una fecha de forma corta
- */
-export function formatDateShort(date: Date | string): string {
-  return formatDate(date, {
-    year: '2-digit',
-    month: '2-digit',
-    day: '2-digit',
-  });
-}
-
-/**
- * Formatea una fecha con hora
- */
-export function formatDateTime(date: Date | string): string {
-  return formatDate(date, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-/**
- * Capitaliza la primera letra de una cadena
- */
-export function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/**
- * Convierte un string a formato título
- */
-export function toTitleCase(str: string): string {
-  return str.replace(/\w\S*/g, (txt) => {
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-  });
-}
-
-/**
- * Trunca un texto a un número específico de caracteres
- */
-export function truncate(str: string, length: number, suffix = '...'): string {
-  if (str.length <= length) return str;
-  return str.substring(0, length) + suffix;
-}
-
-/**
- * Genera un ID único
- */
-export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
-
-/**
- * Verifica si una cadena es un email válido
- */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
- * Verifica si una cadena es un número de teléfono válido (Ecuador)
- */
-export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^(\+?593|0)[2-9]\d{7,8}$/;
-  return phoneRegex.test(phone.replace(/\s|-/g, ''));
-}
-
-/**
- * Verifica si una cadena es una cédula ecuatoriana válida
- */
-export function isValidCedula(cedula: string): boolean {
-  if (cedula.length !== 10) return false;
-  
-  const digits = cedula.split('').map(Number);
-  const province = parseInt(cedula.substring(0, 2));
-  
-  if (province < 1 || province > 24) return false;
-  
-  const lastDigit = digits[9];
-  let sum = 0;
-  
-  for (let i = 0; i < 9; i++) {
-    let product = digits[i] * (i % 2 === 0 ? 2 : 1);
-    if (product > 9) product -= 9;
-    sum += product;
-  }
-  
-  const checkDigit = sum % 10 === 0 ? 0 : 10 - (sum % 10);
-  return checkDigit === lastDigit;
-}
-
-/**
- * Formatea un número de teléfono ecuatoriano
- */
-export function formatPhone(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '');
-  
-  if (cleaned.startsWith('593')) {
-    // Formato internacional
-    const national = cleaned.substring(3);
-    return `+593 ${national.substring(0, 1)} ${national.substring(1, 4)} ${national.substring(4)}`;
-  } else if (cleaned.length === 10) {
-    // Formato nacional
-    return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 5)} ${cleaned.substring(5)}`;
-  } else if (cleaned.length === 9) {
-    // Sin código de área
-    return `${cleaned.substring(0, 1)} ${cleaned.substring(1, 4)} ${cleaned.substring(4)}`;
-  }
-  
-  return phone;
-}
-
-/**
- * Formatea una cédula ecuatoriana
- */
-export function formatCedula(cedula: string): string {
-  const cleaned = cedula.replace(/\D/g, '');
-  if (cleaned.length === 10) {
-    return `${cleaned.substring(0, 2)}.${cleaned.substring(2, 5)}.${cleaned.substring(5, 8)}.${cleaned.substring(8)}`;
-  }
-  return cedula;
-}
-
-/**
- * Calcula la edad basada en la fecha de nacimiento
- */
-export function calculateAge(birthDate: Date | string): number {
-  const birth = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+// Función para calcular la edad a partir de fecha de nacimiento
+export const calculateAge = (birthDate: string): number => {
   const today = new Date();
-  
+  const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
   
@@ -175,146 +20,203 @@ export function calculateAge(birthDate: Date | string): number {
   }
   
   return age;
-}
+};
 
-/**
- * Obtiene las iniciales de un nombre
- */
-export function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase())
-    .join('')
-    .substring(0, 2);
-}
-
-/**
- * Convierte bytes a formato legible
- */
-export function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 Bytes';
-
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-/**
- * Genera un color basado en una cadena
- */
-export function stringToColor(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  const hue = hash % 360;
-  return `hsl(${hue}, 70%, 50%)`;
-}
-
-/**
- * Debounce function
- */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-  
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-/**
- * Throttle function
- */
-export function throttle<T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): (...args: Parameters<T>) => void {
-  let inThrottle: boolean;
-  
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-}
-
-/**
- * Copia texto al portapapeles
- */
-export async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (err) {
-    // Fallback para navegadores que no soportan clipboard API
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      return true;
-    } catch (err) {
-      document.body.removeChild(textArea);
-      return false;
-    }
-  }
-}
-
-/**
- * Descarga un archivo blob
- */
-export function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Convierte un objeto a query string
- */
-export function objectToQueryString(obj: Record<string, any>): string {
-  const params = new URLSearchParams();
-  
-  for (const [key, value] of Object.entries(obj)) {
-    if (value !== null && value !== undefined && value !== '') {
-      params.append(key, String(value));
-    }
-  }
-  
-  return params.toString();
-}
-
-/**
- * Parsea query string a objeto
- */
-export function queryStringToObject(queryString: string): Record<string, string> {
-  const params = new URLSearchParams(queryString);
-  const obj: Record<string, string> = {};
-  
-  // Usar Array.from para compatibilidad
-  Array.from(params.entries()).forEach(([key, value]) => {
-    obj[key] = value;
+// Función para formatear fecha - Acepta tanto Date como string para compatibilidad
+export const formatDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
+};
+
+// Función para formatear fecha con opciones personalizadas
+export const formatDateWithOptions = (
+  date: Date | string, 
+  options: Intl.DateTimeFormatOptions
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('es-ES', options);
+};
+
+// Función para formatear fecha desde string (alias para compatibilidad)
+export const formatDateString = (dateString: string): string => {
+  return formatDate(dateString);
+};
+
+// Función para formatear fecha corta - Acepta Date o string
+export const formatDateShort = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+// Función para validar documento de identidad ecuatoriano
+export const validateCedulaEcuador = (cedula: string): boolean => {
+  if (cedula.length !== 10) return false;
   
-  return obj;
-}
+  const digits = cedula.split('').map(Number);
+  const province = parseInt(cedula.substring(0, 2));
+  
+  if (province < 1 || province > 24) return false;
+  
+  const coefficients = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+  let sum = 0;
+  
+  for (let i = 0; i < 9; i++) {
+    let result = digits[i] * coefficients[i];
+    if (result >= 10) result -= 9;
+    sum += result;
+  }
+  
+  const verifier = (10 - (sum % 10)) % 10;
+  return verifier === digits[9];
+};
+
+// Función para obtener rango de edad
+export const getAgeRange = (age: number): string => {
+  if (age < 6) return '0-5 años';
+  if (age <= 8) return '6-8 años';
+  if (age <= 12) return '9-12 años';
+  if (age <= 15) return '13-15 años';
+  if (age <= 18) return '16-18 años';
+  return '19+ años';
+};
+
+// Función para determinar el color de asistencia
+export const getAttendanceColor = (percentage: number): 'success' | 'warning' | 'error' => {
+  if (percentage >= 80) return 'success';
+  if (percentage >= 60) return 'warning';
+  return 'error';
+};
+
+// Función para generar iniciales
+export const getInitials = (firstName: string, lastName: string): string => {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+};
+
+// Función para validar edad mínima/máxima para niveles
+export const validateAgeForLevel = (age: number, level: string): boolean => {
+  const ageRanges: Record<string, { min: number; max: number }> = {
+    'Iniciación': { min: 6, max: 8 },
+    'Reconciliación': { min: 8, max: 10 },
+    'Comunión': { min: 9, max: 11 },
+    'Confirmación I': { min: 12, max: 14 },
+    'Confirmación II': { min: 13, max: 15 },
+    'Jóvenes': { min: 16, max: 25 }
+  };
+  
+  const range = ageRanges[level];
+  if (!range) return true; // Si no hay rango definido, se permite
+  
+  return age >= range.min && age <= range.max;
+};
+
+// Función para formatear porcentaje
+export const formatPercentage = (value: number): string => {
+  return `${Math.round(value)}%`;
+};
+
+// Función para determinar si un catequizando es elegible para inscripción
+export const isEligibleForEnrollment = (
+  catequizando: any,
+  targetLevel: string
+): { eligible: boolean; reasons: string[] } => {
+  const reasons: string[] = [];
+  
+  // Verificar si está activo
+  if (catequizando.activo === false) {
+    reasons.push('El catequizando no está activo');
+  }
+  
+  const age = calculateAge(catequizando.fecha_nacimiento);
+  if (!validateAgeForLevel(age, targetLevel)) {
+    reasons.push(`La edad (${age} años) no es apropiada para el nivel ${targetLevel}`);
+  }
+  
+  // Verificar si ya tiene inscripción activa
+  if (catequizando.inscripcion_activa) {
+    reasons.push('Ya tiene una inscripción activa');
+  }
+  
+  return {
+    eligible: reasons.length === 0,
+    reasons
+  };
+};
+
+// Función para formatear nombres completos
+export const formatFullName = (nombres: string, apellidos: string): string => {
+  return `${nombres.trim()} ${apellidos.trim()}`;
+};
+
+// Función para capitalizar primera letra
+export const capitalize = (text: string): string => {
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+};
+
+// Función para limpiar y formatear documento
+export const formatDocumento = (documento: string): string => {
+  return documento.replace(/[^a-zA-Z0-9\-]/g, '').toUpperCase();
+};
+
+// Función para validar email básico
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Función para generar slug/ID de URL
+export const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[áàäâ]/g, 'a')
+    .replace(/[éèëê]/g, 'e')
+    .replace(/[íìïî]/g, 'i')
+    .replace(/[óòöô]/g, 'o')
+    .replace(/[úùüû]/g, 'u')
+    .replace(/ñ/g, 'n')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+};
+
+// Función para truncar texto
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trim() + '...';
+};
+
+// Función para formatear teléfono ecuatoriano
+export const formatPhoneEcuador = (phone: string): string => {
+  const cleaned = phone.replace(/\D/g, '');
+  
+  if (cleaned.length === 10) {
+    return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  }
+  
+  if (cleaned.length === 9) {
+    return `0${cleaned.slice(0, 1)}-${cleaned.slice(1, 4)}-${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  }
+  
+  return phone; // Retornar original si no coincide con formatos esperados
+};
+
+// Función para determinar la clase de nivel según el tipo
+export const getNivelClass = (nivel: string): string => {
+  const nivelLower = nivel.toLowerCase();
+  
+  if (nivelLower.includes('iniciación')) return 'bg-blue-100 text-blue-800';
+  if (nivelLower.includes('reconciliación')) return 'bg-green-100 text-green-800';
+  if (nivelLower.includes('comunión')) return 'bg-yellow-100 text-yellow-800';
+  if (nivelLower.includes('confirmación')) return 'bg-purple-100 text-purple-800';
+  if (nivelLower.includes('jóvenes')) return 'bg-indigo-100 text-indigo-800';
+  
+  return 'bg-gray-100 text-gray-800';
+};
