@@ -1,4 +1,4 @@
-// Tipos para respuestas de API
+// src/types/api.ts - TIPOS CORREGIDOS Y UNIFICADOS
 export interface ApiResponse<T = any> {
   success: boolean;
   data: T;
@@ -33,17 +33,39 @@ export interface PaginationParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+// ESTRUCTURA UNIFICADA DE PAGINACIÓN
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  // Aliases para compatibilidad con backend
+  current_page?: number;
+  per_page?: number;
+  total_pages?: number;
+}
+
+// RESPUESTA PAGINADA PRINCIPAL (con meta)
 export interface PaginatedResponse<T> {
   data: T[];
-  meta: {
+  meta: PaginationMeta;
+}
+
+// RESPUESTA PAGINADA ALTERNATIVA (con pagination)
+export interface PaginatedResponseAlt<T> {
+  data: T[];
+  pagination: {
+    current_page: number;
+    per_page: number;
     total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
+    total_pages: number;
   };
 }
+
+// TIPO UNIFICADO que acepta ambas estructuras
+export type UnifiedPaginatedResponse<T> = PaginatedResponse<T> | PaginatedResponseAlt<T>;
 
 export interface FilterParams {
   [key: string]: string | number | boolean | undefined;
@@ -66,4 +88,21 @@ export interface UploadProgress {
 export interface UploadOptions {
   onProgress?: (progress: UploadProgress) => void;
   timeout?: number;
+}
+
+// Interfaz para columnas de tabla
+export interface TableColumn<T> {
+  key: keyof T;
+  label: string;
+  sortable?: boolean;
+  width?: string;
+  align?: 'left' | 'center' | 'right';
+  hidden?: boolean;
+  render?: (value: any, row: T) => React.ReactNode;
+}
+
+// Configuración de sorting
+export interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
 }

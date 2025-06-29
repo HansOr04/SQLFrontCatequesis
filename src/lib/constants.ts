@@ -24,6 +24,42 @@ export const USER_ROLE_LABELS = {
   [USER_ROLES.CONSULTA]: 'Consulta',
 } as const;
 
+// ✨ NUEVA ADICIÓN: Sistema de permisos de usuario
+export const USER_PERMISSIONS = {
+  // Dashboard
+  VIEW_DASHBOARD: ['admin', 'parroco', 'secretaria', 'catequista', 'consulta'],
+  
+  // Gestión de catequizandos
+  VIEW_CATEQUIZANDOS: ['admin', 'parroco', 'secretaria', 'catequista'],
+  MANAGE_CATEQUIZANDOS: ['admin', 'parroco', 'secretaria'],
+  
+  // Gestión de catequistas
+  VIEW_CATEQUISTAS: ['admin', 'parroco', 'secretaria'],
+  MANAGE_CATEQUISTAS: ['admin', 'parroco'],
+  
+  // Gestión de grupos
+  VIEW_GRUPOS: ['admin', 'parroco', 'secretaria', 'catequista'],
+  MANAGE_GRUPOS: ['admin', 'parroco', 'secretaria'],
+  
+  // Gestión de asistencia
+  VIEW_ASISTENCIA: ['admin', 'parroco', 'secretaria', 'catequista'],
+  MANAGE_ASISTENCIA: ['admin', 'parroco', 'secretaria', 'catequista'],
+  
+  // Gestión de certificados
+  VIEW_CERTIFICADOS: ['admin', 'parroco', 'secretaria', 'catequista'],
+  MANAGE_CERTIFICADOS: ['admin', 'parroco', 'secretaria'],
+  
+  // Administración del sistema
+  MANAGE_SYSTEM: ['admin'],
+  MANAGE_PARROQUIAS: ['admin'],
+  MANAGE_NIVELES: ['admin'],
+  MANAGE_USERS: ['admin'],
+  
+  // Reportes
+  VIEW_REPORTS: ['admin', 'parroco'],
+  GENERATE_REPORTS: ['admin', 'parroco'],
+} as const;
+
 // Estados de inscripción
 export const INSCRIPTION_STATUS = {
   ACTIVE: 'activo',

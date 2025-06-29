@@ -1,4 +1,4 @@
-// src/components/catequizandos/CatequizandoList.tsx
+// src/components/catequizandos/CatequizandoList.tsx - Corregido
 'use client';
 
 import React, { useState } from 'react';
@@ -35,7 +35,7 @@ interface CatequizandoListProps {
 }
 
 export const CatequizandoList: React.FC<CatequizandoListProps> = ({
-  catequizandos,
+  catequizandos = [], // Valor por defecto para evitar undefined
   loading = false,
   onEdit,
   onDelete,
@@ -56,11 +56,14 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
   const canDelete = user?.tipo_perfil === 'admin';
   const canCreate = user?.tipo_perfil && ['admin', 'parroco', 'secretaria'].includes(user.tipo_perfil);
 
+  // Verificar que catequizandos esté definido y sea un array
+  const safeCatequizandos = Array.isArray(catequizandos) ? catequizandos : [];
+
   // Columnas para la tabla usando los campos del backend
   const columns = [
     {
       key: 'avatar',
-      label: '',
+      title: '',
       render: (catequizando: Catequizando) => (
         <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
           <span className="text-blue-600 font-semibold text-sm">
@@ -71,7 +74,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
     },
     {
       key: 'nombre_completo',
-      label: 'Nombre',
+      title: 'Nombre',
       sortable: true,
       render: (catequizando: Catequizando) => (
         <div>
@@ -86,7 +89,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
     },
     {
       key: 'fecha_nacimiento',
-      label: 'Fecha de Nacimiento',
+      title: 'Fecha de Nacimiento',
       sortable: true,
       render: (catequizando: Catequizando) => (
         <div>
@@ -101,7 +104,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
     },
     {
       key: 'edad',
-      label: 'Edad',
+      title: 'Edad',
       sortable: true,
       render: (catequizando: Catequizando) => {
         const edad = catequizando.edad || calculateAge(catequizando.fecha_nacimiento);
@@ -117,7 +120,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
     },
     {
       key: 'caso_especial',
-      label: 'Estado',
+      title: 'Estado',
       render: (catequizando: Catequizando) => (
         <div className="flex flex-col space-y-1">
           <Badge variant="success" size="sm">
@@ -137,7 +140,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
   if (showActions) {
     columns.push({
       key: 'actions',
-      label: 'Acciones',
+      title: 'Acciones',
       render: (catequizando: Catequizando) => (
         <div className="flex space-x-2">
           <Link href={`${ROUTES.CATEQUIZANDOS}/${catequizando.id}`}>
@@ -231,6 +234,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="space-y-4">
@@ -243,7 +247,8 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
     );
   }
 
-  if (catequizandos.length === 0) {
+  // Empty state
+  if (!safeCatequizandos || safeCatequizandos.length === 0) {
     return (
       <div className="text-center py-12">
         <UserPlusIcon className="mx-auto h-12 w-12 text-gray-400" />
@@ -272,7 +277,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
       {/* Header con controles de vista */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium text-gray-900">
-          Catequizandos ({catequizandos.length})
+          Catequizandos ({safeCatequizandos.length})
         </h2>
         
         <div className="flex items-center space-x-3">
@@ -311,7 +316,7 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
       {/* Lista/Grid de catequizandos */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {catequizandos.map((catequizando) => (
+          {safeCatequizandos.map((catequizando) => (
             <CatequizandoCard
               key={catequizando.id}
               catequizando={catequizando}
@@ -324,8 +329,9 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
       ) : (
         <Table
           columns={columns}
-          data={catequizandos}
+          data={safeCatequizandos}
           loading={loading}
+          keyExtractor={(item) => item.id?.toString() || '0'}
         />
       )}
 
@@ -400,10 +406,9 @@ export const CatequizandoList: React.FC<CatequizandoListProps> = ({
                 Cancelar
               </Button>
               <Button
-                variant="primary"
+                variant="danger"
                 onClick={confirmDelete}
                 loading={actionLoading}
-                className="bg-red-600 hover:bg-red-700"
               >
                 Eliminar
               </Button>

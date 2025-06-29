@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES, USER_PERMISSIONS } from '@/lib/constants';
 import { Badge } from '@/components/common/Badge';
+import { useRoleBasedStats, useFallbackStats } from '@/hooks/useSidebarStats';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -38,85 +39,8 @@ interface NavItem {
   badge?: string | number;
   permissions?: string[];
   children?: Omit<NavItem, 'children'>[];
+  statsKey?: string; // Nueva propiedad para vincular con estadísticas
 }
-
-const navigation: NavItem[] = [
-  {
-    name: 'Dashboard',
-    href: ROUTES.DASHBOARD,
-    icon: Squares2X2Icon,
-    permissions: ['VIEW_DASHBOARD'],
-  },
-  {
-    name: 'Catequizandos',
-    href: ROUTES.CATEQUIZANDOS,
-    icon: UsersIcon,
-    badge: '410',
-    permissions: ['VIEW_CATEQUIZANDOS'],
-  },
-  {
-    name: 'Catequistas',
-    href: ROUTES.CATEQUISTAS,
-    icon: AcademicCapIcon,
-    badge: '28',
-    permissions: ['VIEW_CATEQUISTAS'],
-  },
-  {
-    name: 'Grupos',
-    href: ROUTES.GRUPOS,
-    icon: UserGroupIcon,
-    badge: '15',
-    permissions: ['VIEW_GRUPOS'],
-  },
-  {
-    name: 'Asistencia',
-    href: ROUTES.ASISTENCIA,
-    icon: CheckCircleIcon,
-    permissions: ['VIEW_ASISTENCIA'],
-  },
-  {
-    name: 'Certificados',
-    href: ROUTES.CERTIFICADOS,
-    icon: DocumentTextIcon,
-    badge: '10',
-    permissions: ['VIEW_CERTIFICADOS'],
-  },
-];
-
-const adminNavigation: NavItem[] = [
-  {
-    name: 'Administración',
-    href: ROUTES.ADMINISTRACION,
-    icon: CogIcon,
-    permissions: ['MANAGE_SYSTEM'],
-    children: [
-      {
-        name: 'Parroquias',
-        href: ROUTES.PARROQUIAS,
-        icon: BuildingLibraryIcon,
-        permissions: ['MANAGE_PARROQUIAS'],
-      },
-      {
-        name: 'Niveles',
-        href: ROUTES.NIVELES,
-        icon: Bars3BottomLeftIcon,
-        permissions: ['MANAGE_NIVELES'],
-      },
-      {
-        name: 'Usuarios',
-        href: ROUTES.USUARIOS,
-        icon: UserCircleIcon,
-        permissions: ['MANAGE_USERS'],
-      },
-      {
-        name: 'Reportes',
-        href: ROUTES.REPORTES,
-        icon: ChartBarIcon,
-        permissions: ['VIEW_REPORTS'],
-      },
-    ],
-  },
-];
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   isOpen, 
@@ -126,6 +50,107 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { stats, loading } = useFallbackStats(); // Usa el hook con fallback
+
+  // Función para obtener el badge dinámico de las estadísticas
+  const getBadgeValue = (statsKey?: string): string | number | undefined => {
+    if (!statsKey || !stats) return undefined;
+    
+    const value = stats[statsKey as keyof typeof stats];
+    
+    // No mostrar badge si el valor es 0 o undefined
+    if (!value || value === 0) return undefined;
+    
+    // Formatear números grandes
+    if (typeof value === 'number') {
+      if (value >= 1000) {
+        return `${Math.floor(value / 1000)}k+`;
+      }
+      return value.toString();
+    }
+    
+    return value;
+  };
+
+  // Configuración de navegación principal con estadísticas dinámicas
+  const navigation: NavItem[] = [
+    {
+      name: 'Dashboard',
+      href: ROUTES.DASHBOARD,
+      icon: Squares2X2Icon,
+      permissions: ['VIEW_DASHBOARD'],
+    },
+    {
+      name: 'Catequizandos',
+      href: ROUTES.CATEQUIZANDOS,
+      icon: UsersIcon,
+      permissions: ['VIEW_CATEQUIZANDOS'],
+      statsKey: 'catequizandos', // ✅ Endpoint existe
+    },
+    {
+      name: 'Catequistas',
+      href: ROUTES.CATEQUISTAS,
+      icon: AcademicCapIcon,
+      permissions: ['VIEW_CATEQUISTAS'],
+      statsKey: 'catequistas', // ✅ Endpoint existe
+    },
+    {
+      name: 'Grupos',
+      href: ROUTES.GRUPOS,
+      icon: UserGroupIcon,
+      permissions: ['VIEW_GRUPOS'],
+      statsKey: 'grupos', // ✅ Calculado desde /grupos
+    },
+    {
+      name: 'Asistencia',
+      href: ROUTES.ASISTENCIA,
+      icon: CheckCircleIcon,
+      permissions: ['VIEW_ASISTENCIA'],
+      // No mostrar badge para asistencia (no hay endpoint general)
+    },
+    {
+      name: 'Certificados',
+      href: ROUTES.CERTIFICADOS,
+      icon: DocumentTextIcon,
+      permissions: ['VIEW_CERTIFICADOS'],
+      // ❌ Sin badge - endpoint no existe
+    },
+  ];
+
+  const adminNavigation: NavItem[] = [
+    {
+      name: 'Administración',
+      href: ROUTES.ADMINISTRACION,
+      icon: CogIcon,
+      permissions: ['MANAGE_SYSTEM'],
+      children: [
+        {
+          name: 'Parroquias',
+          href: ROUTES.PARROQUIAS,
+          icon: BuildingLibraryIcon,
+          permissions: ['MANAGE_PARROQUIAS'],
+        },
+        {
+          name: 'Niveles',
+          href: ROUTES.NIVELES,
+          icon: Bars3BottomLeftIcon,
+          permissions: ['MANAGE_NIVELES'],
+        },
+        {
+          name: 'Usuarios',
+          href: ROUTES.USUARIOS,
+          icon: UserCircleIcon,
+          permissions: ['MANAGE_USERS'],
+        },
+        {
+          name: 'Reportes',
+          href: ROUTES.REPORTES,
+          icon: ChartBarIcon,
+          permissions: ['VIEW_REPORTS'],
+        },
+      ],
+    },
+  ];
 
   const hasPermission = (permissions?: string[]): boolean => {
     if (!permissions || permissions.length === 0) return true;
@@ -134,29 +159,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // Admin tiene todos los permisos
     if (user.tipo_perfil === 'admin') return true;
     
-    // Aquí puedes implementar la lógica de permisos más específica
-    // Por ahora, simplificamos basándonos en el tipo de perfil
+    // Usar el sistema de permisos centralizado
     return permissions.some(permission => {
-      switch (permission) {
-        case 'VIEW_DASHBOARD':
-          return true; // Todos pueden ver dashboard
-        case 'VIEW_CATEQUIZANDOS':
-        case 'VIEW_GRUPOS':
-        case 'VIEW_ASISTENCIA':
-        case 'VIEW_CERTIFICADOS':
-          return ['admin', 'parroco', 'secretaria', 'catequista'].includes(user.tipo_perfil);
-        case 'VIEW_CATEQUISTAS':
-          return ['admin', 'parroco', 'secretaria'].includes(user.tipo_perfil);
-        case 'MANAGE_PARROQUIAS':
-        case 'MANAGE_NIVELES':
-        case 'MANAGE_USERS':
-        case 'MANAGE_SYSTEM':
-          return user.tipo_perfil === 'admin';
-        case 'VIEW_REPORTS':
-          return ['admin', 'parroco'].includes(user.tipo_perfil);
-        default:
-          return false;
-      }
+      const allowedRoles = USER_PERMISSIONS[permission as keyof typeof USER_PERMISSIONS];
+      return allowedRoles?.includes(user.tipo_perfil as any) || false;
     });
   };
 
@@ -174,6 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (!hasPermission(item.permissions)) return null;
 
     const current = isCurrentPage(item.href);
+    const badgeValue = getBadgeValue(item.statsKey);
     
     return (
       <Link
@@ -202,13 +209,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {!collapsed && (
           <>
             <span className="flex-1">{item.name}</span>
-            {item.badge && (
+            {badgeValue && (
               <Badge
                 variant={current ? 'primary' : 'neutral'}
                 size="sm"
                 className="ml-2"
               >
-                {item.badge}
+                {loading ? '...' : badgeValue}
               </Badge>
             )}
           </>

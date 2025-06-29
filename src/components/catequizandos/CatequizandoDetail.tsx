@@ -1,4 +1,4 @@
-// src/components/catequizandos/CatequizandoDetail.tsx
+// src/components/catequizandos/CatequizandoDetail.tsx - Corregido
 'use client';
 
 import React, { useState } from 'react';
@@ -50,9 +50,6 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
   
   const canEdit = user?.tipo_perfil && ['admin', 'parroco', 'secretaria'].includes(user.tipo_perfil);
   const edad = catequizando.edad || calculateAge(catequizando.fecha_nacimiento);
-  
-  // Usar edad como fallback para porcentaje de asistencia
-  const porcentajeAsistencia = catequizando.porcentaje_asistencia ?? edad ?? 0;
 
   const tabs = [
     { id: 'general', label: 'Información General', icon: DocumentTextIcon },
@@ -62,31 +59,31 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
     { id: 'familia', label: 'Familia y Padrinos', icon: UsersIcon },
   ];
 
-  // Columnas para tabla de inscripciones
+  // Columnas para tabla de inscripciones - CORREGIDO: title en lugar de label
   const inscripcionesColumns = [
     {
       key: 'periodo',
-      label: 'Período',
+      title: 'Período',
       render: (item: any) => <span className="font-medium">{item.periodo}</span>
     },
     {
       key: 'nivel',
-      label: 'Nivel',
+      title: 'Nivel',
       render: (item: any) => <span>{item.nivel}</span>
     },
     {
       key: 'grupo',
-      label: 'Grupo',
+      title: 'Grupo',
       render: (item: any) => <span>{item.grupo}</span>
     },
     {
       key: 'parroquia',
-      label: 'Parroquia',
+      title: 'Parroquia',
       render: (item: any) => <span className="text-sm">{item.parroquia}</span>
     },
     {
       key: 'estado',
-      label: 'Estado',
+      title: 'Estado',
       render: (item: any) => (
         <Badge 
           variant={
@@ -102,7 +99,7 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
     },
     {
       key: 'asistencia',
-      label: 'Asistencia',
+      title: 'Asistencia',
       render: (item: any) => (
         <span className={`font-medium ${
           (item.asistencia_promedio ?? 0) >= 80 ? 'text-green-600' : 
@@ -114,31 +111,31 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
     }
   ];
 
-  // Columnas para tabla de certificados
+  // Columnas para tabla de certificados - CORREGIDO: title en lugar de label
   const certificadosColumns = [
     {
       key: 'numero',
-      label: 'N° Certificado',
+      title: 'N° Certificado',
       render: (item: any) => <span className="font-mono text-sm">{item.numero_certificado || 'N/A'}</span>
     },
     {
       key: 'nivel',
-      label: 'Nivel',
+      title: 'Nivel',
       render: (item: any) => <span className="font-medium">{item.nivel}</span>
     },
     {
       key: 'fecha_emision',
-      label: 'Fecha de Emisión',
+      title: 'Fecha de Emisión',
       render: (item: any) => <span>{formatDate(item.fecha_emision)}</span>
     },
     {
       key: 'parroquia',
-      label: 'Parroquia',
+      title: 'Parroquia',
       render: (item: any) => <span className="text-sm">{item.parroquia}</span>
     },
     {
       key: 'estado',
-      label: 'Estado',
+      title: 'Estado',
       render: (item: any) => (
         <Badge 
           variant={
@@ -176,8 +173,10 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                     {catequizando.nombres.charAt(0)}{catequizando.apellidos.charAt(0)}
                   </span>
                 </div>
-                {/* Estado activo por defecto */}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-3 border-white bg-green-400" />
+                {/* Estado activo/inactivo basado en el dato real */}
+                <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-3 border-white ${
+                  catequizando.activo ? 'bg-green-400' : 'bg-red-400'
+                }`} />
               </div>
 
               {/* Información básica */}
@@ -197,11 +196,25 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                     <CalendarIcon className="h-4 w-4 mr-2" />
                     <span>{formatDate(catequizando.fecha_nacimiento)} ({edad} años)</span>
                   </div>
+
+                  {catequizando.nombre_parroquia && (
+                    <div className="flex items-center text-gray-600">
+                      <HomeIcon className="h-4 w-4 mr-2" />
+                      <span>{catequizando.nombre_parroquia}</span>
+                    </div>
+                  )}
+
+                  {catequizando.nivel_actual && (
+                    <div className="flex items-center text-gray-600">
+                      <AcademicCapIcon className="h-4 w-4 mr-2" />
+                      <span>Nivel actual: {catequizando.nivel_actual}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2 mt-3">
-                  <Badge variant="success">
-                    Activo
+                  <Badge variant={catequizando.activo ? "success" : "error"}>
+                    {catequizando.activo ? 'Activo' : 'Inactivo'}
                   </Badge>
                   
                   {catequizando.caso_especial && (
@@ -222,6 +235,19 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                 </div>
                 <p className="text-sm text-gray-500">Años de edad</p>
               </div>
+
+              {/* Porcentaje de asistencia si existe */}
+              {catequizando.porcentaje_asistencia !== undefined && (
+                <div>
+                  <div className={`text-2xl font-bold ${
+                    catequizando.porcentaje_asistencia >= 80 ? 'text-green-600' : 
+                    catequizando.porcentaje_asistencia >= 60 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {catequizando.porcentaje_asistencia}%
+                  </div>
+                  <p className="text-sm text-gray-500">Asistencia</p>
+                </div>
+              )}
 
               {/* Botón editar */}
               {canEdit && (
@@ -288,11 +314,23 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Estado</dt>
                     <dd>
-                      <Badge variant="success" size="sm">
-                        Activo
+                      <Badge variant={catequizando.activo ? "success" : "error"} size="sm">
+                        {catequizando.activo ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </dd>
                   </div>
+                  {catequizando.nombre_parroquia && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Parroquia</dt>
+                      <dd className="text-sm text-gray-900">{catequizando.nombre_parroquia}</dd>
+                    </div>
+                  )}
+                  {catequizando.nivel_actual && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Nivel actual</dt>
+                      <dd className="text-sm text-gray-900">{catequizando.nivel_actual}</dd>
+                    </div>
+                  )}
                   {catequizando.caso_especial && (
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Observaciones</dt>
@@ -338,6 +376,18 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                     <span className="text-sm text-gray-600">Sacramentos recibidos</span>
                     <span className="font-medium">{sacramentos.length}</span>
                   </div>
+
+                  {catequizando.porcentaje_asistencia !== undefined && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Porcentaje de asistencia</span>
+                      <span className={`font-medium ${
+                        catequizando.porcentaje_asistencia >= 80 ? 'text-green-600' : 
+                        catequizando.porcentaje_asistencia >= 60 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {catequizando.porcentaje_asistencia}%
+                      </span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -358,6 +408,7 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                 <Table
                   columns={inscripcionesColumns}
                   data={inscripciones}
+                  keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 />
               ) : (
                 <div className="text-center py-8">
@@ -386,6 +437,7 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                 <Table
                   columns={certificadosColumns}
                   data={certificados}
+                  keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 />
               ) : (
                 <div className="text-center py-8">
@@ -416,6 +468,9 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                         <div>
                           <p className="font-medium">{sacramento.nombre}</p>
                           <p className="text-sm text-gray-500">{formatDate(sacramento.fecha)}</p>
+                          {sacramento.parroquia && (
+                            <p className="text-sm text-gray-500">{sacramento.parroquia}</p>
+                          )}
                         </div>
                       </div>
                       <Badge variant="success" size="sm">Recibido</Badge>
@@ -450,7 +505,15 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                       <div key={index} className="p-3 border rounded-lg">
                         <p className="font-medium">{representante.nombres} {representante.apellidos}</p>
                         <p className="text-sm text-gray-500">{representante.relacion}</p>
-                        <p className="text-sm text-gray-500">{representante.telefono}</p>
+                        {representante.telefono && (
+                          <p className="text-sm text-gray-500">{representante.telefono}</p>
+                        )}
+                        {representante.email && (
+                          <p className="text-sm text-gray-500">{representante.email}</p>
+                        )}
+                        {representante.es_principal && (
+                          <Badge variant="primary" size="sm" className="mt-1">Principal</Badge>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -475,6 +538,9 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                         {padrino.telefono && (
                           <p className="text-sm text-gray-500">{padrino.telefono}</p>
                         )}
+                        {padrino.email && (
+                          <p className="text-sm text-gray-500">{padrino.email}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -483,6 +549,59 @@ export const CatequizandoDetail: React.FC<CatequizandoDetailProps> = ({
                 )}
               </CardContent>
             </Card>
+
+            {/* Datos de bautismo si existen */}
+            {bautismo && (
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Datos de Bautismo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Fecha de bautismo</dt>
+                      <dd className="text-sm text-gray-900">{formatDate(bautismo.fecha_bautismo)}</dd>
+                    </div>
+                    {bautismo.parroquia_bautismo && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Parroquia de bautismo</dt>
+                        <dd className="text-sm text-gray-900">{bautismo.parroquia_bautismo}</dd>
+                      </div>
+                    )}
+                    {bautismo.parroco_bautismo && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Párroco</dt>
+                        <dd className="text-sm text-gray-900">{bautismo.parroco_bautismo}</dd>
+                      </div>
+                    )}
+                    {bautismo.libro && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Libro</dt>
+                        <dd className="text-sm text-gray-900">{bautismo.libro}</dd>
+                      </div>
+                    )}
+                    {bautismo.folio && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Folio</dt>
+                        <dd className="text-sm text-gray-900">{bautismo.folio}</dd>
+                      </div>
+                    )}
+                    {bautismo.numero && (
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Número</dt>
+                        <dd className="text-sm text-gray-900">{bautismo.numero}</dd>
+                      </div>
+                    )}
+                    {bautismo.padrinos && (
+                      <div className="md:col-span-2">
+                        <dt className="text-sm font-medium text-gray-500">Padrinos de bautismo</dt>
+                        <dd className="text-sm text-gray-900">{bautismo.padrinos}</dd>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

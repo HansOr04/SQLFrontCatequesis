@@ -1,4 +1,4 @@
-// src/app/(dashboard)/catequizandos/page.tsx - Importación corregida
+// src/app/(dashboard)/catequizandos/page.tsx - VERSIÓN FINAL CORREGIDA
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import Pagination from '@/components/common/Pagination'; // ✅ Importación corregida
+import Pagination from '@/components/common/Pagination';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/common/Card';
 import { useAuth } from '@/context/AuthContext';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -32,8 +32,16 @@ import {
   CatequizandoFormData,
   CatequizandoStats as StatsType
 } from '@/types/catequizando';
-import { PaginatedResponse } from '@/types/api';
+import { PaginatedResponseAlt } from '@/types/api';
 import { ROUTES } from '@/lib/constants';
+
+// Estructura de paginación unificada
+interface PaginationState {
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+}
 
 export default function CatequizandosPage() {
   const router = useRouter();
@@ -63,7 +71,8 @@ export default function CatequizandosPage() {
     limit: 12
   });
   
-  const [pagination, setPagination] = useState({
+  // Estados de paginación
+  const [pagination, setPagination] = useState<PaginationState>({
     current_page: 1,
     per_page: 12,
     total: 0,
@@ -78,36 +87,83 @@ export default function CatequizandosPage() {
   const canEdit = user?.tipo_perfil && ['admin', 'parroco', 'secretaria'].includes(user.tipo_perfil);
   const canDelete = user?.tipo_perfil === 'admin';
 
-  // Cargar catequizandos
+  // Cargar catequizandos con mejor manejo de errores
   const loadCatequizandos = useCallback(async (currentFilters: FilterType) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response: PaginatedResponse<Catequizando> = await catequizandosService.getAll(currentFilters);
+      console.log('🔍 Cargando catequizandos con filtros:', currentFilters);
       
-      setCatequizandos(response.data);
-      setPagination(response.pagination);
-    } catch (err) {
-      console.error('Error al cargar catequizandos:', err);
-      setError('Error al cargar los catequizandos. Por favor, intenta de nuevo.');
+      // Usar el tipo correcto que devuelve el servicio
+      const response: PaginatedResponseAlt<Catequizando> = await catequizandosService.getAll(currentFilters);
+      
+      console.log('✅ Respuesta recibida:', response);
+      
+      // Ahora accedemos a 'pagination' en lugar de 'meta'
+      if (response && response.data && Array.isArray(response.data)) {
+        setCatequizandos(response.data);
+        
+        // Usar la estructura 'pagination' que devuelve el servicio
+        if (response.pagination) {
+          setPagination({
+            current_page: response.pagination.current_page || currentFilters.page || 1,
+            per_page: response.pagination.per_page || currentFilters.limit || 12,
+            total: response.pagination.total || 0,
+            total_pages: response.pagination.total_pages || 0
+          });
+        } else {
+          // Fallback si no hay paginación
+          setPagination({
+            current_page: 1,
+            per_page: response.data.length,
+            total: response.data.length,
+            total_pages: 1
+          });
+        }
+      } else {
+        console.warn('⚠️ Estructura de respuesta inesperada:', response);
+        setCatequizandos([]);
+        setPagination({
+          current_page: 1,
+          per_page: 12,
+          total: 0,
+          total_pages: 0
+        });
+      }
+    } catch (err: any) {
+      console.error('💥 Error al cargar catequizandos:', err);
+      setError(err.message || 'Error al cargar los catequizandos. Por favor, intenta de nuevo.');
       setCatequizandos([]);
+      setPagination({
+        current_page: 1,
+        per_page: 12,
+        total: 0,
+        total_pages: 0
+      });
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Cargar estadísticas
+  // Cargar estadísticas con manejo mejorado de errores
   const loadStats = useCallback(async () => {
     try {
       setStatsLoading(true);
+      console.log('📊 Cargando estadísticas...');
+      
       const response = await catequizandosService.getStats();
       
-      if (response.success) {
+      if (response.success && response.data) {
+        console.log('✅ Estadísticas cargadas:', response.data);
         setStats(response.data);
+      } else {
+        console.warn('⚠️ No se pudieron cargar las estadísticas:', response.message);
+        // No mostrar error para estadísticas, es funcionalidad secundaria
       }
-    } catch (err) {
-      console.error('Error al cargar estadísticas:', err);
+    } catch (err: any) {
+      console.error('💥 Error al cargar estadísticas:', err);
+      // No mostrar error para estadísticas, es funcionalidad secundaria
     } finally {
       setStatsLoading(false);
     }
@@ -115,17 +171,20 @@ export default function CatequizandosPage() {
 
   // Efectos
   useEffect(() => {
+    console.log('🚀 Iniciando carga de catequizandos...');
     loadCatequizandos(filters);
-  }, [loadCatequizandos, filters, debouncedSearchTerm]);
+  }, [loadCatequizandos, filters]);
 
   useEffect(() => {
     if (showStats && !stats) {
+      console.log('📊 Cargando estadísticas por primera vez...');
       loadStats();
     }
   }, [showStats, stats, loadStats]);
 
   // Manejadores de eventos
   const handleFiltersChange = (newFilters: FilterType) => {
+    console.log('🔄 Actualizando filtros:', newFilters);
     setFilters({
       ...newFilters,
       page: 1 // Reset página al cambiar filtros
@@ -133,6 +192,7 @@ export default function CatequizandosPage() {
   };
 
   const handleSearch = (query: string) => {
+    console.log('🔍 Nueva búsqueda:', query);
     setFilters(prev => ({
       ...prev,
       search: query,
@@ -141,21 +201,28 @@ export default function CatequizandosPage() {
   };
 
   const handlePageChange = (page: number) => {
+    console.log('📄 Cambiando a página:', page);
     setFilters(prev => ({
       ...prev,
       page
     }));
   };
 
+  const handlePageSizeChange = (size: number) => {
+    console.log('📏 Cambiando tamaño de página:', size);
+    setFilters(prev => ({
+      ...prev,
+      limit: size,
+      page: 1
+    }));
+  };
+
   const handleViewModeChange = (mode: 'table' | 'grid') => {
+    console.log('👁️ Cambiando modo de vista:', mode);
     setViewMode(mode);
     // Ajustar límite según el modo de vista
     const newLimit = mode === 'grid' ? 12 : 20;
-    setFilters(prev => ({
-      ...prev,
-      limit: newLimit,
-      page: 1
-    }));
+    handlePageSizeChange(newLimit);
   };
 
   // CRUD Operations
@@ -173,7 +240,7 @@ export default function CatequizandosPage() {
         }
         router.push(`${ROUTES.CATEQUIZANDOS}/${response.data.id}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al crear catequizando:', err);
       setError('Error al crear el catequizando. Por favor, intenta de nuevo.');
     } finally {
@@ -202,7 +269,7 @@ export default function CatequizandosPage() {
           await loadStats();
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al actualizar catequizando:', err);
       setError('Error al actualizar el catequizando. Por favor, intenta de nuevo.');
     } finally {
@@ -223,7 +290,7 @@ export default function CatequizandosPage() {
           await loadStats();
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al eliminar catequizando:', err);
       setError('Error al eliminar el catequizando. Por favor, intenta de nuevo.');
     } finally {
@@ -280,7 +347,7 @@ export default function CatequizandosPage() {
         <CatequizandoStats
           data={stats}
           loading={statsLoading}
-          error={error}
+          error={null} // No mostrar errores de estadísticas
         />
       )}
 
@@ -383,7 +450,7 @@ export default function CatequizandosPage() {
             onPageChange={handlePageChange}
             showPageSize={true}
             pageSize={pagination.per_page}
-            onPageSizeChange={(size) => setFilters(prev => ({ ...prev, limit: size, page: 1 }))}
+            onPageSizeChange={handlePageSizeChange}
             totalItems={pagination.total}
             itemsPerPage={pagination.per_page}
           />
